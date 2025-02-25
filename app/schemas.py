@@ -1,6 +1,6 @@
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 from datetime import datetime
-from typing import List, Optional
+from typing import List
 from decimal import Decimal
 
 class TradeBase(BaseModel):
@@ -8,6 +8,20 @@ class TradeBase(BaseModel):
     trade_type: str  # BUY or SELL
     price: float
     quantity: int
+
+    @field_validator("price")
+    @classmethod
+    def validate_price(cls, v):
+        if v <= 0:
+            raise ValueError("Price must be positive")
+        return v
+
+    @field_validator("quantity")
+    @classmethod
+    def validate_quantity(cls, v):
+        if v <= 0:
+            raise ValueError("Quantity must be positive")
+        return v
 
 class TradeCreate(TradeBase):
     pass  # Used for creating trades
@@ -28,13 +42,15 @@ class TickerDataBase(BaseModel):
     volume: int
     ticker_symbol: str
 
-    @validator('open', 'high', 'low', 'close')
+    @field_validator("open", "high", "low", "close")
+    @classmethod
     def validate_prices(cls, v):
         if v <= 0:
             raise ValueError("Price must be positive")
         return v
-    
-    @validator('volume')
+
+    @field_validator("volume")
+    @classmethod
     def validate_volume(cls, v):
         if v < 0:
             raise ValueError("Volume cannot be negative")
