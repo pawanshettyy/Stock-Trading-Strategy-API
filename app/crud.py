@@ -23,8 +23,8 @@ def get_trades(db: Session, skip: int = 0, limit: int = 10):
 def create_ticker_data(db: Session, ticker_data: schemas.TickerDataCreate):
     """ Inserts a new ticker data record into the database """
     db_ticker_data = models.TickerData(
-        datetime=ticker_data.datetime,
-        open=ticker_data.open,
+        recorded_at=ticker_data.recorded_at,  # Fixed column name
+        open=ticker_data.open,  # Ensuring consistency with models.py
         high=ticker_data.high,
         low=ticker_data.low,
         close=ticker_data.close,
@@ -40,7 +40,7 @@ def create_ticker_data_bulk(db: Session, ticker_data_list: List[schemas.TickerDa
     """ Inserts multiple ticker data records into the database """
     db_ticker_data_list = [
         models.TickerData(
-            datetime=item.datetime,
+            recorded_at=item.recorded_at,  # Fixed column name
             open=item.open,
             high=item.high,
             low=item.low,
@@ -62,10 +62,10 @@ def get_ticker_data(db: Session, skip: int = 0, limit: int = 100, ticker_symbol:
     if ticker_symbol:
         query = query.filter(models.TickerData.ticker_symbol == ticker_symbol)
     
-    return query.order_by(models.TickerData.datetime).offset(skip).limit(limit).all()
+    return query.order_by(models.TickerData.recorded_at).offset(skip).limit(limit).all()  # Fixed column name
 
 def get_ticker_data_for_strategy(db: Session, ticker_symbol: str):
     """ Fetches all ticker data for a specific symbol for strategy calculation """
     return db.query(models.TickerData).filter(
         models.TickerData.ticker_symbol == ticker_symbol
-    ).order_by(models.TickerData.datetime).all()
+    ).order_by(models.TickerData.recorded_at).all()  # Fixed column name

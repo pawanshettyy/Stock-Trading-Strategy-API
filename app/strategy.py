@@ -1,83 +1,76 @@
-import pandas as pd
+import logging
 from sqlalchemy.orm import Session
-from .models import TickerData
+from . import models
+import pandas as pd
 
-def moving_average_crossover_strategy(db: Session, ticker_symbol: str, short_window: int = 5, long_window: int = 20):
-    """
-    Implements a Moving Average Crossover Strategy.
-    """
-    # Fetch stock data
-    ticker_data = db.query(TickerData).filter(
-        TickerData.ticker_symbol == ticker_symbol
-    ).order_by(TickerData.timestamp).all()
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-    if len(ticker_data) < long_window:
-        return {"error": f"Not enough data. Need at least {long_window} data points."}
+def moving_average_crossover_strategy(db: Session, ticker_symbol: str, short_window: int, long_window: int):
+    logger.info(f"Fetching historical data for {ticker_symbol}...")
+
+    # Fetch historical data from the database
+    ticker_data = (
+        db.query(models.TickerData)
+        .filter(models.TickerData.ticker_symbol == ticker_symbol)
+        .order_by(models.TickerData.recorded_at)
+        .all()
+    )
+
+    if not ticker_data:
+        logger.error("No data found for the given ticker symbol.")
+        return {"error": "No data found for the given ticker symbol."}
+
+    logger.info(f"Fetched {len(ticker_data)} records for {ticker_symbol}")
 
     # Convert data to DataFrame
-    df = pd.DataFrame([{
-        "timestamp": data.timestamp,
-        "close": float(data.close)
-    } for data in ticker_data])
+    df = pd.DataFrame(
+        [(d.recorded_at, d.close) for d in ticker_data], columns=["recorded_at", "close"]
+    )
+    df.set_index("recorded_at", inplace=True)
 
-    if df.empty or df['close'].isnull().all():
-        return {"error": "No valid price data available"}
+    # Ensure sufficient data for moving averages
+    if len(df) < max(short_window, long_window):
+        logger.error("Not enough data for the given moving average windows.")
+        return {"error": "Not enough data for the given moving average windows."}
+
+    logger.info(f"Calculating {short_window}-day and {long_window}-day moving averages...")
 
     # Calculate moving averages
-    df["short_ma"] = df["close"].rolling(window=short_window, min_periods=1).mean()
-    df["long_ma"] = df["close"].rolling(window=long_window, min_periods=1).mean()
+    df["short_ma"] = df["close"].rolling(window=short_window).mean()
+    df["long_ma"] = df["close"].rolling(window=long_window).mean()
 
-    # Generate signals
-    df["signal"] = 0
-    df.loc[df["short_ma"] > df["long_ma"], "signal"] = 1  # Buy
-    df.loc[df["short_ma"] < df["long_ma"], "signal"] = -1  # Sell
-    df["position"] = df["signal"].diff()
+    # Debug: Print last few rows of moving averages
+    logger.info(f"Latest moving average values:\n{df[['close', 'short_ma', 'long_ma']].tail(5)}")
 
-    # Debugging: Print last 10 rows
-    print(df.tail(10))
+    # Generate buy/sell signals
+    logger.info("Generating buy/sell signals...")
+    df["signal"] = 0  # Default: No signal
+    df.loc[df["short_ma"] > df["long_ma"], "signal"] = 1  # Buy signal
+    df.loc[df["short_ma"] < df["long_ma"], "signal"] = -1  # Sell signal
 
-    # Ensure there are signals
-    if df["position"].dropna().empty:
-        return {"error": "Not enough signal data for trading"}
+    # Debug: Log last 5 signal changes
+    logger.info(f"Recent signal values:\n{df[['short_ma', 'long_ma', 'signal']].tail(5)}")
 
-    # Generate trade list
-    trades = []
-    for idx, row in df.iterrows():
-        if row["position"] == 1:  # Buy signal
-            trades.append({
-                "timestamp": row["timestamp"].isoformat(),
-                "type": "BUY",
-                "price": row["close"],
-                "signal": "Short MA crossed above Long MA"
-            })
-        elif row["position"] == -1:  # Sell signal
-            trades.append({
-                "timestamp": row["timestamp"].isoformat(),
-                "type": "SELL",
-                "price": row["close"],
-                "signal": "Short MA crossed below Long MA"
-            })
+    # Calculate trade statistics
+    df["trade"] = df["signal"].diff().fillna(0)  # Detect changes in signal
+    total_trades = df["trade"].abs().sum()
+    winning_trades = (df["trade"] == 1).sum()
+    losing_trades = (df["trade"] == -1).sum()
 
-    # Calculate profit/loss & winning trades
-    pnl = 0
-    winning_trades = 0
-    for i in range(0, len(trades) - 1, 2):  # Buy-Sell pairs
-        trade_profit = trades[i + 1]["price"] - trades[i]["price"]
-        pnl += trade_profit
-        if trade_profit > 0:
-            winning_trades += 1
+    # Simplified profit/loss calculation
+    profit_loss = (df["close"].iloc[-1] - df["close"].iloc[0]) * total_trades  
 
-    # Prepare result
-    result = {
+    logger.info(f"Strategy execution completed for {ticker_symbol}")
+    logger.info(f"Total trades: {total_trades}, Winning trades: {winning_trades}, Losing trades: {losing_trades}")
+    logger.info(f"Estimated profit/loss: {profit_loss}")
+
+    return {
         "ticker_symbol": ticker_symbol,
-        "start_date": df["timestamp"].iloc[0].isoformat() if not df.empty else None,
-        "end_date": df["timestamp"].iloc[-1].isoformat() if not df.empty else None,
-        "short_window": short_window,
-        "long_window": long_window,
-        "total_trades": len(trades) // 2,
-        "winning_trades": winning_trades,  # ✅ Added winning trades count
-        "profit_loss": round(pnl, 2),
-        "signals": trades
+        "total_trades": int(total_trades),
+        "winning_trades": int(winning_trades),
+        "losing_trades": int(losing_trades),
+        "profit_loss": float(profit_loss),
+        "signals": df[["close", "short_ma", "long_ma", "signal"]].reset_index().to_dict(orient="records")
     }
-
-    return result

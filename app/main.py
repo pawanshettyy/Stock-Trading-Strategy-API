@@ -1,7 +1,9 @@
 from fastapi import FastAPI, Depends, HTTPException, Query
 from typing import List, Optional
 from sqlalchemy.orm import Session
-from . import database, models, schemas, crud, strategy
+from app import models, schemas, crud, strategy
+from app.database import engine, SessionLocal
+from sqlalchemy import event
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -11,13 +13,13 @@ app = FastAPI(
 )
 
 # Ensure database tables are created when the app starts
-@app.on_event("startup")
-def startup():
-    models.Base.metadata.create_all(bind=database.engine)
+@event.listens_for(engine, "connect")
+def startup(dbapi_connection, connection_record):
+    models.Base.metadata.create_all(bind=engine)
 
 # Dependency to get DB session
 def get_db():
-    db = database.SessionLocal()
+    db = SessionLocal()
     try:
         yield db
     finally:
@@ -87,3 +89,7 @@ def get_strategy_performance(
     - Buy/sell signals
     """
     return strategy.moving_average_crossover_strategy(db, ticker_symbol, short_window, long_window)
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)

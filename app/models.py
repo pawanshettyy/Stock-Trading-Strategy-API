@@ -16,8 +16,8 @@ class TickerData(Base):
     __tablename__ = "ticker_data"
 
     id = Column(Integer, primary_key=True, index=True)
-    timestamp = Column(DateTime, index=True, nullable=False)  # Renamed `recorded_at` to `timestamp`
-    open = Column(DECIMAL(10, 2), nullable=False)
+    recorded_at = Column(DateTime, index=True, nullable=False)  # Fixed column name
+    open = Column(DECIMAL(10, 2), nullable=False)  # Fixed naming to match DB schema
     high = Column(DECIMAL(10, 2), nullable=False)
     low = Column(DECIMAL(10, 2), nullable=False)
     close = Column(DECIMAL(10, 2), nullable=False)
