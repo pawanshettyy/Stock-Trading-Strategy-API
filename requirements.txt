@@ -1,0 +1,7 @@
+fastapi
+prisma
+uvicorn
+pydantic
+asyncpg
+pandas
+unittest
