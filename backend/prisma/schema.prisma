@@ -1,6 +1,8 @@
 generator client {
-  provider = "prisma-client-js"
+  provider                     = "prisma-client-py"
+  enable_experimental_decimal  = true
 }
+
 
 datasource db {
   provider = "postgresql"
