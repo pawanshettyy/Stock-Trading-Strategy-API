@@ -1,18 +1,22 @@
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-import os
+from prisma import Prisma
+import contextlib
+from typing import AsyncGenerator
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:password@localhost:5432/stock_data_read")
-
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
-
-# Dependency for DB session
-def get_db():
-    db = SessionLocal()
+# Create a generator function for Prisma client to use as a dependency
+async def get_prisma() -> AsyncGenerator[Prisma, None]:
+    prisma = Prisma()
+    await prisma.connect()
     try:
-        yield db
+        yield prisma
     finally:
-        db.close()
+        await prisma.disconnect()
+
+# Context manager for Prisma client
+@contextlib.asynccontextmanager
+async def get_prisma_client():
+    prisma = Prisma()
+    await prisma.connect()
+    try:
+        yield prisma
+    finally:
+        await prisma.disconnect()
