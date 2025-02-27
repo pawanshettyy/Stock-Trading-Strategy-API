@@ -1,6 +1,7 @@
+
 # Stock Trading Strategy API
 
-A FastAPI application with PostgreSQL backend for analyzing stock data and implementing a simple Moving Average Crossover Strategy.
+A FastAPI application with PostgreSQL backend for analyzing stock data and implementing a Moving Average Crossover Strategy.
 
 ## Features
 
@@ -16,22 +17,30 @@ A FastAPI application with PostgreSQL backend for analyzing stock data and imple
 ```
 ├── backend/                  # FastAPI application
 │   ├── app/                  # API code
+│   │   ├── __init__.py       # Python package initialization
 │   │   ├── database.py       # Database connection
 │   │   ├── main.py           # FastAPI app initialization
 │   │   ├── routes.py         # API routes
 │   │   ├── schemas.py        # Pydantic models
 │   │   └── strategy.py       # Trading strategy implementation
-│   ├── prisma/               # Prisma ORM configuration
+│   ├── schema/               # Prisma ORM configuration
+│   │   ├── migrations/       # Database migrations
 │   │   └── schema.prisma     # Database schema
 │   ├── tests/                # Unit tests
-│   └── requirements.txt      # Python dependencies
+│   │   ├── __init__.py       # Test package initialization
+│   │   ├── test_api.py       # API endpoint tests
+│   │   └── test_strategy.py  # Strategy implementation tests
+│   ├── .env                  # Environment variables
+│   ├── requirements.txt      # Python dependencies
+│   ├── test_db.py            # Database connection test
+│   └── test_prisma.py        # Prisma ORM test
 ├── frontend/                 # Streamlit dashboard
 │   ├── app.py                # Dashboard UI
 │   └── requirements.txt      # Frontend dependencies
+├── .gitignore                # Git ignore file
 ├── Dockerfile                # API Docker configuration
 ├── docker-compose.yml        # Multi-container setup
-├── HINDALCO_1D.xlsx          # Sample stock data
-├── seed.js                   # Data seeding script
+├── seed.py                   # Python data seeding script
 └── README.md                 # Project documentation
 ```
 
@@ -40,7 +49,7 @@ A FastAPI application with PostgreSQL backend for analyzing stock data and imple
 ### Prerequisites
 
 * Python 3.9+
-* Node.js 14+ (for Prisma)
+* Node.js 16+ (for Prisma)
 * PostgreSQL 14+
 * Docker and Docker Compose (optional)
 
@@ -57,6 +66,7 @@ A FastAPI application with PostgreSQL backend for analyzing stock data and imple
    createdb stock_data_read
 
    # Update the DATABASE_URL in backend/.env if needed
+   # Current default: postgresql://pawan:8617@localhost:5432/stock_data_read
    ```
 3. **Set up the backend**
    ```bash
@@ -70,14 +80,11 @@ A FastAPI application with PostgreSQL backend for analyzing stock data and imple
    pip install -r requirements.txt
 
    # Install Node.js dependencies for Prisma
-   npm install -g prisma
-   npm install @prisma/client
+   npm init -y
+   npm install prisma @prisma/client
 
    # Generate Prisma client
    npx prisma generate
-
-   # Apply database migrations
-   npx prisma migrate dev
 
    # Test database connection
    python test_db.py
@@ -87,11 +94,8 @@ A FastAPI application with PostgreSQL backend for analyzing stock data and imple
    # Navigate to project root
    cd ..
 
-   # Install Node.js dependencies for the seed script
-   npm install @prisma/client xlsx
-
    # Run the seed script
-   node seed.js
+   python seed.py
    ```
 5. **Run the FastAPI application**
    ```bash
@@ -99,8 +103,9 @@ A FastAPI application with PostgreSQL backend for analyzing stock data and imple
    uvicorn app.main:app --reload
 
    # The API will be available at http://127.0.0.1:8000
+   # OpenAPI documentation at http://127.0.0.1:8000/docs
    ```
-6. **Set up the frontend**
+6. **Set up and run the frontend**
    ```bash
    cd frontend
    pip install -r requirements.txt
@@ -119,14 +124,11 @@ A FastAPI application with PostgreSQL backend for analyzing stock data and imple
    ```
 2. **Seed the database in Docker**
    ```bash
-   # Install Node.js dependencies locally
-   npm install @prisma/client xlsx
-
-   # Modify seed.js to use the Docker database URL:
+   # If needed, update the DATABASE_URL in seed.py:
    # DATABASE_URL=postgresql://postgres:8617@localhost:5432/stock_data_read
 
    # Run the seed script
-   node seed.js
+   python seed.py
    ```
 3. **Run the Streamlit dashboard**
    ```bash
@@ -140,7 +142,10 @@ A FastAPI application with PostgreSQL backend for analyzing stock data and imple
 * `GET /`: Home endpoint, returns a welcome message
 * `GET /data`: Fetch all stock data records
 * `POST /data`: Add new stock data records
-* `GET /strategy/performance`: Get the performance of the moving average crossover strategy
+* `GET /strategy/performance`: Get the performance of the moving average crossover strategy with query parameters:
+  * `short_window`: Short-term moving average period (default: 20)
+  * `long_window`: Long-term moving average period (default: 50)
+  * `instrument`: Filter by instrument (optional)
 
 ## Trading Strategy
 
@@ -154,6 +159,8 @@ The application implements a Moving Average Crossover Strategy:
    * Win rate
    * Trade count
    * Profit/loss statistics
+   * Sharpe ratio
+   * Maximum drawdown
 
 ## Testing
 
@@ -172,3 +179,4 @@ The frontend provides a visual interface for:
 * Visualizing moving averages and trade signals
 * Analyzing strategy performance metrics
 * Exploring raw data with filtering options
+* Downloading filtered data as CSV

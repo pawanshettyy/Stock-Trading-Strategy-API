@@ -1,6 +1,6 @@
-streamlit
-pandas
-numpy
-matplotlib
-plotly
-requests
+streamlit>=1.10.0
+pandas>=1.3.0
+numpy>=1.20.0
+matplotlib>=3.4.0
+plotly>=5.3.0
+requests>=2.26.0
