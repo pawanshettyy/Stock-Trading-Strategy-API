@@ -15,7 +15,7 @@ st.set_page_config(
 )
 
 # App title
-st.title("📊 Stock Trading Strategy Dashboard")
+st.title("📊 Stock Trading Strategy Dashboard by Pawan Shetty")
 
 # Sidebar
 st.sidebar.header("Strategy Parameters")
