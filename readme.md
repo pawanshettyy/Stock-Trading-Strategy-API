@@ -125,8 +125,7 @@ A FastAPI application with PostgreSQL backend for analyzing stock data and imple
 2. **Seed the database in Docker**
    ```bash
    # If needed, update the DATABASE_URL in seed.py:
-   # DATABASE_URL=postgresql://postgres:8617@localhost:5432/stock_data_read
-
+  
    # Run the seed script
    python seed.py
    ```
