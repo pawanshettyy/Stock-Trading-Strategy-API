@@ -94,7 +94,11 @@ with tab1:
         if stock_data:
             # Create DataFrame
             df = pd.DataFrame(stock_data)
-            df['datetime'] = pd.to_datetime(df['datetime'])
+            
+            # Ensure 'datetime' column is parsed correctly
+            df['datetime'] = pd.to_datetime(df['datetime'], errors='coerce')  # Coerce invalid datetime entries
+            
+            # Sort data by datetime
             df = df.sort_values('datetime')
             
             # Calculate moving averages
@@ -210,7 +214,7 @@ with tab2:
     if stock_data:
         # Create DataFrame
         df = pd.DataFrame(stock_data)
-        df['datetime'] = pd.to_datetime(df['datetime'])
+        df['datetime'] = pd.to_datetime(df['datetime'], errors='coerce')
         df = df.sort_values('datetime')
         
         # Basic stats

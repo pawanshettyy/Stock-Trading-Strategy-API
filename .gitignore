@@ -1,0 +1,56 @@
+# Python
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.pdb
+*.log
+*.swp
+*.swo
+*.idea/
+.vscode/
+
+# Virtual Environment
+venv/
+.env/
+.env.*
+__pycache__/
+*.py[cod]
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Pytest
+.cache/
+
+# IDE Files
+.idea/
+.vscode/
+
+# Distribution / Packaging
+*.egg-info/
+dist/
+build/
+
+# Environment files
+*.env
+
+# Data files
+*.csv
+*.tsv
+*.json
+*.db
+
+# Logs
+*.log
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# Streamlit files
+.streamlit/
+
+# Other temporary files
+*.bak
+*.swp

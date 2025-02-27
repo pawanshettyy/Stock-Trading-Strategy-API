@@ -71,7 +71,7 @@ async def get_strategy_performance(
             
         stocks = await prisma.stockdata.find_many(
             where=where,
-            order_by={"datetime": "asc"}
+            order=[{"datetime": "asc"}]  # Fixed: Correct Prisma syntax
         )
         
         if not stocks:
