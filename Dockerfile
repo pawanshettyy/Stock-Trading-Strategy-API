@@ -1,13 +1,22 @@
 FROM python:3.9-slim
 
+# Install Node.js for Prisma
+RUN apt-get update && \
+    apt-get install -y curl gnupg && \
+    curl -sL https://deb.nodesource.com/setup_16.x | bash - && \
+    apt-get install -y nodejs && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
+
+# Install Node dependencies for Prisma
+RUN npm init -y && \
+    npm install prisma @prisma/client
 
 # Copy requirements and install dependencies
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-
-# Install Prisma client
-RUN pip install prisma
 
 # Copy the rest of the application
 COPY backend/ .

@@ -1,16 +1,21 @@
 from fastapi import FastAPI
-from app.database import engine
-from app.models import Base
+from fastapi.middleware.cors import CORSMiddleware
 from app.routes import router
 
-# Create database tables
-Base.metadata.create_all(bind=engine)
+app = FastAPI(title="Stock Trading Strategy API")
 
-app = FastAPI()
+# Configure CORS for frontend access
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # For development - restrict in production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Include Routes
-app.include_router(router)
+app.include_router(router, prefix="")
 
 @app.get("/")
 def home():
-    return {"message": "FastAPI is running!"}
+    return {"message": "Stock Trading Strategy API is running!"}
