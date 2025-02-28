@@ -22,6 +22,7 @@ __pycache__/
 
 # Pytest
 .cache/
+.coverage/
 
 # IDE Files
 .idea/

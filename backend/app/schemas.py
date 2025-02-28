@@ -1,4 +1,5 @@
-from pydantic import BaseModel, Field
+# In backend/app/schemas.py
+from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
 from typing import List, Optional
 
@@ -16,9 +17,9 @@ class StockDataCreate(StockDataBase):
 
 class StockData(StockDataBase):
     id: int
-
-    class Config:
-        from_attributes = True
+    
+    # Replace the Config class with ConfigDict
+    model_config = ConfigDict(from_attributes=True)
 
 class StrategyPerformance(BaseModel):
     total_returns: float
